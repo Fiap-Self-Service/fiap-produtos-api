@@ -11,8 +11,7 @@ describe('ProdutoGateway', () => {
     // Criando o mock do repositório
     const mockProdutoRepository = {
       adquirirPorID: jest.fn(),
-      adquirirPorEmail: jest.fn(),
-      adquirirPorCPF: jest.fn(),
+      adquirirPorCategoria: jest.fn(),
       salvarProduto: jest.fn(),
     };
 
@@ -33,20 +32,21 @@ describe('ProdutoGateway', () => {
     it('Deve chamar o método adquirirPorID do repositório e retornar o produto', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
-        nome: 'Produto Teste',
-        email: 'produto@teste.com',
-        cpf: '12345678900',
+        nome: 'X-Salada',
+        descricao: 'Pao brioche, hamburger, queijo, alface e tomate',
+        categoria: 'Lanches',
+        valor: 25,
       };
 
       // Mockando o comportamento do repositório
-      (produtoRepository.adquirirPorID as jest.Mock).mockResolvedValue(
+      (produtoRepository.buscarProdutoPorID as jest.Mock).mockResolvedValue(
         produtoMock,
       );
 
-      const result = await produtoGateway.adquirirPorID('produto-id');
+      const result = await produtoGateway.buscarProdutoPorID('produto-id');
 
       // Verificando se o método foi chamado corretamente
-      expect(produtoRepository.adquirirPorID).toHaveBeenCalledWith(
+      expect(produtoRepository.buscarProdutoPorID).toHaveBeenCalledWith(
         'produto-id',
       );
 
@@ -55,51 +55,26 @@ describe('ProdutoGateway', () => {
     });
   });
 
-  describe('adquirirPorEmail', () => {
-    it('Deve chamar o método adquirirPorEmail do repositório e retornar o produto', async () => {
+  describe('adquirirPorCategoria', () => {
+    it('Deve chamar o método adquirirPorCategoria do repositório e retornar o produto', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
-        nome: 'Produto Teste',
-        email: 'produto@teste.com',
-        cpf: '12345678900',
+        nome: 'X-Salada',
+        descricao: 'Pao brioche, hamburger, queijo, alface e tomate',
+        categoria: 'Lanches',
+        valor: 25,
       };
 
       // Mockando o comportamento do repositório
-      (produtoRepository.adquirirPorEmail as jest.Mock).mockResolvedValue(
+      (produtoRepository.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue(
         produtoMock,
       );
 
-      const result = await produtoGateway.adquirirPorEmail('produto@teste.com');
+      const result = await produtoGateway.buscarProdutoPorCategoria('produto@teste.com');
 
       // Verificando se o método foi chamado corretamente
-      expect(produtoRepository.adquirirPorEmail).toHaveBeenCalledWith(
+      expect(produtoRepository.buscarProdutoPorCategoria).toHaveBeenCalledWith(
         'produto@teste.com',
-      );
-
-      // Verificando se o resultado é o esperado
-      expect(result).toEqual(produtoMock);
-    });
-  });
-
-  describe('adquirirPorCPF', () => {
-    it('Deve chamar o método adquirirPorCPF do repositório e retornar o produto', async () => {
-      const produtoMock: Produto = {
-        id: 'produto-id',
-        nome: 'Produto Teste',
-        email: 'produto@teste.com',
-        cpf: '12345678900',
-      };
-
-      // Mockando o comportamento do repositório
-      (produtoRepository.adquirirPorCPF as jest.Mock).mockResolvedValue(
-        produtoMock,
-      );
-
-      const result = await produtoGateway.adquirirPorCPF('12345678900');
-
-      // Verificando se o método foi chamado corretamente
-      expect(produtoRepository.adquirirPorCPF).toHaveBeenCalledWith(
-        '12345678900',
       );
 
       // Verificando se o resultado é o esperado
@@ -111,20 +86,21 @@ describe('ProdutoGateway', () => {
     it('Deve chamar o método salvarProduto do repositório e retornar o produto salvo', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
-        nome: 'Produto Teste',
-        email: 'produto@teste.com',
-        cpf: '12345678900',
+        nome: 'X-Salada',
+        descricao: 'Pao brioche, hamburger, queijo, alface e tomate',
+        categoria: 'Lanches',
+        valor: 25,
       };
 
       // Mockando o comportamento do repositório
-      (produtoRepository.salvarProduto as jest.Mock).mockResolvedValue(
+      (produtoRepository.cadastrarProduto as jest.Mock).mockResolvedValue(
         produtoMock,
       );
 
-      const result = await produtoGateway.salvarProduto(produtoMock);
+      const result = await produtoGateway.cadastrarProduto(produtoMock);
 
       // Verificando se o método foi chamado corretamente
-      expect(produtoRepository.salvarProduto).toHaveBeenCalledWith(produtoMock);
+      expect(produtoRepository.cadastrarProduto).toHaveBeenCalledWith(produtoMock);
 
       // Verificando se o resultado é o esperado
       expect(result).toEqual(produtoMock);

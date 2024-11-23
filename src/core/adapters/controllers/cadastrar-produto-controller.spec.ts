@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CadastrarProdutoController } from './cadastrar-produto-controller'; // Ajuste o caminho conforme necessário
-import { CadastrarProdutoUseCase } from '../../use-cases/cadastrar-produto-use-case'; // Ajuste o caminho conforme necessário
-import { ProdutoGateway } from '../gateways/produto-gateway'; // Ajuste o caminho conforme necessário
-import { ProdutoDTO } from '../../dto/produtoDTO'; // Ajuste o caminho conforme necessário
+import { CadastrarProdutoController } from './cadastrar-produto-controller';
+import { CadastrarProdutoUseCase } from '../../use-cases/cadastrar-produto-use-case';
+import { ProdutoGateway } from '../gateways/produto-gateway';
+import { ProdutoDTO } from '../../dto/produtoDTO';
+import { Produto } from '../../entities/produto'; // Certifique-se de ajustar o caminho conforme necessário
 
 describe('CadastrarProdutoController', () => {
   let cadastrarProdutoController: CadastrarProdutoController;
@@ -10,7 +11,7 @@ describe('CadastrarProdutoController', () => {
   let produtoGateway: ProdutoGateway;
 
   beforeEach(async () => {
-    // Criando mocks para as dependências
+    // Mock do CadastrarProdutoUseCase
     const mockCadastrarProdutoUseCase = {
       execute: jest.fn(), // Mock do método execute
     };
@@ -29,13 +30,9 @@ describe('CadastrarProdutoController', () => {
       ],
     }).compile();
 
-    // Obtendo a instância do controller
-    cadastrarProdutoController = module.get<CadastrarProdutoController>(
-      CadastrarProdutoController,
-    );
-    cadastrarProdutoUseCase = module.get<CadastrarProdutoUseCase>(
-      CadastrarProdutoUseCase,
-    );
+    // Instanciando os mocks
+    cadastrarProdutoController = module.get<CadastrarProdutoController>(CadastrarProdutoController);
+    cadastrarProdutoUseCase = module.get<CadastrarProdutoUseCase>(CadastrarProdutoUseCase);
     produtoGateway = module.get<ProdutoGateway>(ProdutoGateway);
   });
 
@@ -43,25 +40,25 @@ describe('CadastrarProdutoController', () => {
     it('Deve chamar o CadastrarProdutoUseCase e retornar o ProdutoDTO correto', async () => {
       // Preparando os dados de entrada e o resultado esperado
       const produtoDTO: ProdutoDTO = {
-        nome: 'Produto Teste',
-        email: 'produto@teste.com',
-        cpf: '12345678900',
-        id: null, // Inicialmente, sem ID
+        nome: 'X-Salada',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'Lanches',
+        valor: 25,
+        id: null, // ID será gerado posteriormente
       };
 
-      const produtoResult: ProdutoDTO = {
-        nome: 'Produto Teste',
-        email: 'produto@teste.com',
-        cpf: '12345678900',
-        id: 'novo-id-gerado', // ID gerado após o cadastro
-      };
+      const produtoCadastrado: Produto = new Produto(
+        produtoDTO.nome,
+        produtoDTO.descricao,
+        produtoDTO.categoria,
+        produtoDTO.valor,
+      );
+      produtoCadastrado.id = 'produto-id'; // Simulando um ID gerado pelo sistema
 
       // Mockando o retorno do CadastrarProdutoUseCase
-      (cadastrarProdutoUseCase.execute as jest.Mock).mockResolvedValue(
-        produtoResult,
-      );
+      (cadastrarProdutoUseCase.execute as jest.Mock).mockResolvedValue(produtoCadastrado);
 
-      // Chamar o método execute do controller
+      // Chamando o método execute do controller
       const result = await cadastrarProdutoController.execute(produtoDTO);
 
       // Verificando se o método execute foi chamado corretamente
@@ -71,7 +68,10 @@ describe('CadastrarProdutoController', () => {
       );
 
       // Verificando se o resultado do método execute do controller é o esperado
-      expect(result).toEqual(produtoResult);
+      const expectedProdutoDTO: ProdutoDTO = {
+        ...produtoCadastrado,
+      };
+      expect(result).toEqual(expectedProdutoDTO);
     });
   });
 });
