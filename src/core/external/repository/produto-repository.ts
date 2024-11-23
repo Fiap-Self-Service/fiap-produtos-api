@@ -2,17 +2,17 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { IProdutoRepository } from "./produto-repository.interface";
 import { ProdutoEntity } from "./produto.entity";
+import { getRepositoryToken } from "@nestjs/typeorm";
 
 @Injectable()
 export class ProdutoRepository implements IProdutoRepository {
   constructor(
-    @Inject("PRODUTO_REPOSITORY")
+    @Inject(getRepositoryToken(ProdutoEntity))
     private produtoRepository: Repository<ProdutoEntity>
   ) {}
 
   async buscarProdutoPorID(id: string): Promise<ProdutoEntity>  {
-    const produtoPorID = await this.produtoRepository.findOne({
-      where: { id },
+    const produtoPorID = await this.produtoRepository.findOneBy({id ,
     });
 
     return produtoPorID;

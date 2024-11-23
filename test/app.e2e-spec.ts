@@ -3,10 +3,11 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
 
-const CLIENTE1 = {
-  nome: 'Cliente de Teste',
-  email: 'cliente@teste.com',
-  cpf: '70234146061',
+const PRODUTO1 = {
+  nome: 'X-Salada',
+  descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+  categoria: 'LANCHE',
+  valor: 25,
   id: null,
 };
 
@@ -22,18 +23,18 @@ describe('Testes de Integração', () => {
     await app.init();
   });
 
-  it('Deve cadastrar Cliente', () => {
+  it('Deve cadastrar Produto', () => {
     return request(app.getHttpServer())
-      .post('/clientes')
-      .send(CLIENTE1)
+      .post('/produtos')
+      .send(PRODUTO1)
       .expect(HttpStatus.CREATED);
   });
 
   it('Deve buscar os dados do cliente', async () => {
-    await request(app.getHttpServer()).post('/clientes').send(CLIENTE1);
+    await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
 
     return await request(app.getHttpServer())
-      .get('/clientes/' + CLIENTE1.cpf)
+      .get('/produtos/' + PRODUTO1.id)
       .send()
       .expect(HttpStatus.OK);
   });

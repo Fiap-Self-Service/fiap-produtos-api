@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { IProdutoRepository } from "../../external/repository/produto-repository-interface";
+import { IProdutoRepository } from "../../external/repository/produto-repository.interface";
 import { Produto } from "../../entities/produto";
 
 @Injectable()

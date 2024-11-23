@@ -1,28 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProdutoRepository } from './produto-repository'; // Ajuste o caminho conforme necessário
+import { ProdutoRepository } from './produto-repository'; 
 import { Repository } from 'typeorm';
-import { ProdutoEntity } from './produto.entity'; // Ajuste o caminho conforme necessário
+import { ProdutoEntity } from './produto.entity'; 
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { CategoriaProdutoType } from '../../dto/categoria-produto-type-enum';
 
 describe('ProdutoRepository', () => {
   let produtoRepository: ProdutoRepository;
-  let mockRepository: Repository<ProdutoEntity>;
+  let mockRepository: jest.Mocked<Repository<ProdutoEntity>>;
 
   beforeEach(async () => {
-    // Criando o mock do repositório TypeORM
+    // Criando o mock para o repositório TypeORM
     mockRepository = {
       findOneBy: jest.fn(),
+      find: jest.fn(),
       save: jest.fn(),
-    } as any; // Usando "as any" para simular a interface do Repository
+    } as unknown as jest.Mocked<Repository<ProdutoEntity>>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        ProdutoRepository,
         {
-          provide: ProdutoRepository,
-          useValue: new ProdutoRepository(mockRepository), // instanciando manualmente a classe, passando mock do banco de dados
-        },
-        {
-          provide: getRepositoryToken(ProdutoEntity), // Para injecionar o mock no lugar do repositório real
+          provide: getRepositoryToken(ProdutoEntity),
           useValue: mockRepository,
         },
       ],
@@ -31,93 +30,90 @@ describe('ProdutoRepository', () => {
     produtoRepository = module.get<ProdutoRepository>(ProdutoRepository);
   });
 
-  describe('adquirirPorID', () => {
-    it('Deve chamar o método findOneBy e retornar o produto correto', async () => {
-      const produtoMock = new ProdutoEntity();
-      produtoMock.id = 'produto-id';
-      produtoMock.nome = 'Produto Teste';
-      produtoMock.email = 'produto@teste.com';
-      produtoMock.cpf = '12345678900';
-
-      // Mockando o retorno do método findOneBy
-      (mockRepository.findOneBy as jest.Mock).mockResolvedValue(produtoMock);
-
-      const result = await produtoRepository.adquirirPorID('produto-id');
-
-      // Verificando se o método foi chamado com o parâmetro correto
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+  describe('buscarProdutoPorID', () => {
+    it('Deve chamar o método findOne e retornar o produto correto', async () => {
+      const produtoMock: ProdutoEntity = {
         id: 'produto-id',
-      });
+        nome: 'X-Salada',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
+        valor: 25,
+      };
 
-      // Verificando se o resultado é o esperado
+      mockRepository.findOneBy.mockResolvedValue(produtoMock);
+
+      const result = await produtoRepository.buscarProdutoPorID('produto-id');
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 'produto-id' });
       expect(result).toEqual(produtoMock);
+    });
+
+    it('Deve retornar null se o produto não for encontrado', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      const result = await produtoRepository.buscarProdutoPorID('produto-inexistente');
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 'produto-inexistente' });
+      expect(result).toBeNull();
     });
   });
 
-  describe('adquirirPorEmail', () => {
-    it('Deve chamar o método findOneBy e retornar o produto correto', async () => {
-      const produtoMock = new ProdutoEntity();
-      produtoMock.id = 'produto-id';
-      produtoMock.nome = 'Produto Teste';
-      produtoMock.email = 'produto@teste.com';
-      produtoMock.cpf = '12345678900';
+  describe('buscarProdutoPorCategoria', () => {
+    it('Deve chamar o método find e retornar os produtos corretos', async () => {
+      const produtosMock: ProdutoEntity[] = [
+        {
+          id: 'produto-id-1',
+          nome: 'X-Salada',
+          descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+          categoria: 'LANCHE',
+          valor: 25,
+        },
+        {
+          id: 'produto-id-2',
+          nome: 'X-Bacon',
+          descricao: 'Pão brioche, hamburger, queijo, bacon e molho especial',
+          categoria: 'LANCHE',
+          valor: 30,
+        },
+      ];
 
-      // Mockando o retorno do método findOneBy
-      (mockRepository.findOneBy as jest.Mock).mockResolvedValue(produtoMock);
+      mockRepository.find.mockResolvedValue(produtosMock);
 
-      const result =
-        await produtoRepository.adquirirPorEmail('produto@teste.com');
+      const result = await produtoRepository.buscarProdutoPorCategoria('LANCHE');
 
-      // Verificando se o método foi chamado com o parâmetro correto
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
-        email: 'produto@teste.com',
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        where: { categoria: 'LANCHE' },
       });
-
-      // Verificando se o resultado é o esperado
-      expect(result).toEqual(produtoMock);
+      expect(result).toEqual(produtosMock);
     });
-  });
 
-  describe('adquirirPorCPF', () => {
-    it('Deve chamar o método findOneBy e retornar o produto correto', async () => {
-      const produtoMock = new ProdutoEntity();
-      produtoMock.id = 'produto-id';
-      produtoMock.nome = 'Produto Teste';
-      produtoMock.email = 'produto@teste.com';
-      produtoMock.cpf = '12345678900';
+    it('Deve retornar uma lista vazia se nenhum produto for encontrado', async () => {
+      mockRepository.find.mockResolvedValue([]);
 
-      // Mockando o retorno do método findOneBy
-      (mockRepository.findOneBy as jest.Mock).mockResolvedValue(produtoMock);
+      const result = await produtoRepository.buscarProdutoPorCategoria('BEBIDA');
 
-      const result = await produtoRepository.adquirirPorCPF('12345678900');
-
-      // Verificando se o método foi chamado com o parâmetro correto
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
-        cpf: '12345678900',
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        where: { categoria: 'BEBIDA' },
       });
-
-      // Verificando se o resultado é o esperado
-      expect(result).toEqual(produtoMock);
+      expect(result).toEqual([]);
     });
   });
 
   describe('salvarProduto', () => {
     it('Deve chamar o método save e retornar o produto salvo', async () => {
-      const produtoMock = new ProdutoEntity();
-      produtoMock.id = 'produto-id';
-      produtoMock.nome = 'Produto Teste';
-      produtoMock.email = 'produto@teste.com';
-      produtoMock.cpf = '12345678900';
+      const produtoMock: ProdutoEntity = {
+        id: 'produto-id',
+        nome: 'X-Salada',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
+        valor: 25,
+      };
 
-      // Mockando o retorno do método save
-      (mockRepository.save as jest.Mock).mockResolvedValue(produtoMock);
+      mockRepository.save.mockResolvedValue(produtoMock);
 
-      const result = await produtoRepository.salvarProduto(produtoMock);
+      const result = await produtoRepository.cadastrarProduto(produtoMock);
 
-      // Verificando se o método foi chamado com o parâmetro correto
       expect(mockRepository.save).toHaveBeenCalledWith(produtoMock);
-
-      // Verificando se o resultado é o esperado
       expect(result).toEqual(produtoMock);
     });
   });

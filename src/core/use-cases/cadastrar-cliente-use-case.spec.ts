@@ -1,119 +1,68 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CadastrarClienteUseCase } from './cadastrar-produto-use-case'; // Ajuste o caminho conforme necessário
-import { ClienteGateway } from '../adapters/gateways/produto-gateway'; // Ajuste o caminho conforme necessário
-import { HttpException, HttpStatus } from '@nestjs/common';
-import { ClienteDTO } from '../dto/produtoDTO'; // Ajuste o caminho conforme necessário
-import { Cliente } from '../entities/produto'; // Ajuste o caminho conforme necessário
+import { CadastrarProdutoUseCase } from './cadastrar-produto-use-case'; 
+import { ProdutoGateway } from '../adapters/gateways/produto-gateway'; 
+import { ProdutoDTO } from '../../core/dto/produtoDTO'; 
+import { Produto } from '../../core/entities/produto'; 
 
-describe('CadastrarClienteUseCase', () => {
-  let cadastrarClienteUseCase: CadastrarClienteUseCase;
-  let clienteGatewayMock: ClienteGateway;
+describe('CadastrarProdutoUseCase', () => {
+  let cadastrarProdutoUseCase: CadastrarProdutoUseCase;
+  let produtoGateway: ProdutoGateway;
 
   beforeEach(async () => {
-    // Mockando o ClienteGateway
-    clienteGatewayMock = {
-      adquirirPorCPF: jest.fn(),
-      adquirirPorEmail: jest.fn(),
-      salvarCliente: jest.fn(),
-    } as any; // Mockando a interface ClienteGateway
+    // Mock do ProdutoGateway
+    const mockProdutoGateway = {
+      cadastrarProduto: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CadastrarClienteUseCase,
-        {
-          provide: ClienteGateway,
-          useValue: clienteGatewayMock,
-        },
+        CadastrarProdutoUseCase,
+        { provide: ProdutoGateway, useValue: mockProdutoGateway },
       ],
     }).compile();
 
-    cadastrarClienteUseCase = module.get<CadastrarClienteUseCase>(
-      CadastrarClienteUseCase,
-    );
+    cadastrarProdutoUseCase = module.get<CadastrarProdutoUseCase>(CadastrarProdutoUseCase);
+    produtoGateway = module.get<ProdutoGateway>(ProdutoGateway);
   });
 
   describe('execute', () => {
-    it('Deve lançar uma exceção se o CPF já estiver cadastrado', async () => {
-      const clienteDTO: ClienteDTO = {
-        nome: 'Cliente Teste',
-        email: 'teste@cliente.com',
-        cpf: '123.456.789-00',
-        id: null,
+    it('Deve chamar o ProdutoGateway.cadastrarProduto e retornar o Produto criado', async () => {
+      // Dados de entrada (ProdutoDTO)
+      const produtoDTO: ProdutoDTO = {
+        nome: 'X-Salada',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
+        valor: 25,
+        id: null, // O ID será gerado no cadastro
       };
 
-      // Mockando a resposta do ClienteGateway para indicar que o CPF já está cadastrado
-      (clienteGatewayMock.adquirirPorCPF as jest.Mock).mockResolvedValueOnce(
-        new Cliente('Cliente Teste', 'teste@cliente.com', '12345678900'),
+      // Produto esperado (após o cadastro)
+      const produtoCadastrado: Produto = new Produto(
+        produtoDTO.nome,
+        produtoDTO.descricao,
+        produtoDTO.categoria,
+        produtoDTO.valor,
       );
-      (clienteGatewayMock.adquirirPorEmail as jest.Mock).mockResolvedValue(
-        null,
-      ); // E-mail não está cadastrado
+      produtoCadastrado.id = 'produto-id'; // ID gerado pelo sistema
 
-      // Espera-se que a exceção seja lançada
-      await expect(
-        cadastrarClienteUseCase.execute(clienteGatewayMock, clienteDTO),
-      ).rejects.toThrowError(
-        new HttpException('CPF já cadastrado.', HttpStatus.BAD_REQUEST),
-      );
-    });
+      // Mockando o comportamento do ProdutoGateway
+      (produtoGateway.cadastrarProduto as jest.Mock).mockResolvedValue(produtoCadastrado);
 
-    it('Deve lançar uma exceção se o e-mail já estiver cadastrado', async () => {
-      const clienteDTO: ClienteDTO = {
-        nome: 'Cliente Teste',
-        email: 'teste@cliente.com',
-        cpf: '123.456.789-00',
-        id: null,
-      };
+      // Chamando o método execute do use case
+      const result = await cadastrarProdutoUseCase.execute(produtoGateway, produtoDTO);
 
-      // Mockando a resposta do ClienteGateway para indicar que o CPF não está cadastrado, mas o e-mail já está
-      (clienteGatewayMock.adquirirPorCPF as jest.Mock).mockResolvedValue(null); // CPF não está cadastrado
-      (clienteGatewayMock.adquirirPorEmail as jest.Mock).mockResolvedValueOnce(
-        new Cliente('Cliente Teste', 'teste@cliente.com', '12345678900'),
+      // Verificando se o método cadastrarProduto foi chamado corretamente
+      expect(produtoGateway.cadastrarProduto).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: produtoDTO.nome,
+          descricao: produtoDTO.descricao,
+          categoria: produtoDTO.categoria,
+          valor: produtoDTO.valor,
+        }),
       );
 
-      // Espera-se que a exceção seja lançada
-      await expect(
-        cadastrarClienteUseCase.execute(clienteGatewayMock, clienteDTO),
-      ).rejects.toThrowError(
-        new HttpException('E-mail já cadastrado.', HttpStatus.BAD_REQUEST),
-      );
-    });
-
-    it('Deve salvar o cliente se CPF e e-mail não estiverem cadastrados', async () => {
-      const clienteDTO: ClienteDTO = {
-        nome: 'Cliente Teste',
-        email: 'teste@cliente.com',
-        cpf: '123.456.789-00',
-        id: null,
-      };
-
-      const clienteMock = new Cliente(
-        'Cliente Teste',
-        'teste@cliente.com',
-        '12345678900',
-      );
-
-      // Mockando as respostas do ClienteGateway
-      (clienteGatewayMock.adquirirPorCPF as jest.Mock).mockResolvedValue(null); // CPF não está cadastrado
-      (clienteGatewayMock.adquirirPorEmail as jest.Mock).mockResolvedValue(
-        null,
-      ); // E-mail não está cadastrado
-      (clienteGatewayMock.salvarCliente as jest.Mock).mockResolvedValue(
-        clienteMock,
-      ); // Salva o cliente
-
-      const result = await cadastrarClienteUseCase.execute(
-        clienteGatewayMock,
-        clienteDTO,
-      );
-
-      // Verificando se o método salvarCliente foi chamado com o cliente correto
-      expect(clienteGatewayMock.salvarCliente).toHaveBeenCalledWith(
-        clienteMock,
-      );
-
-      // Verificando se o cliente retornado é o esperado
-      expect(result).toEqual(clienteMock);
+      // Verificando se o resultado é o esperado
+      expect(result).toEqual(produtoCadastrado);
     });
   });
 });

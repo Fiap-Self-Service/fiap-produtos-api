@@ -28,8 +28,8 @@ describe('ProdutoGateway', () => {
     produtoRepository = module.get<IProdutoRepository>(IProdutoRepository);
   });
 
-  describe('adquirirPorID', () => {
-    it('Deve chamar o método adquirirPorID do repositório e retornar o produto', async () => {
+  describe('buscarProdutoPorID', () => {
+    it('Deve chamar o método buscarProdutoPorID do repositório e retornar o produto', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
         nome: 'X-Salada',
@@ -55,8 +55,8 @@ describe('ProdutoGateway', () => {
     });
   });
 
-  describe('adquirirPorCategoria', () => {
-    it('Deve chamar o método adquirirPorCategoria do repositório e retornar o produto', async () => {
+  describe('buscarProdutoPorCategoria', () => {
+    it('Deve chamar o método buscarProdutoPorCategoria do repositório e retornar o produto', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
         nome: 'X-Salada',
@@ -70,11 +70,11 @@ describe('ProdutoGateway', () => {
         produtoMock,
       );
 
-      const result = await produtoGateway.buscarProdutoPorCategoria('produto@teste.com');
+      const result = await produtoGateway.buscarProdutoPorCategoria('Lanches');
 
       // Verificando se o método foi chamado corretamente
       expect(produtoRepository.buscarProdutoPorCategoria).toHaveBeenCalledWith(
-        'produto@teste.com',
+        'Lanches',
       );
 
       // Verificando se o resultado é o esperado
@@ -82,8 +82,8 @@ describe('ProdutoGateway', () => {
     });
   });
 
-  describe('salvarProduto', () => {
-    it('Deve chamar o método salvarProduto do repositório e retornar o produto salvo', async () => {
+  describe('cadastrarProduto', () => {
+    it('Deve chamar o método cadastrarProduto do repositório e retornar o produto salvo', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
         nome: 'X-Salada',

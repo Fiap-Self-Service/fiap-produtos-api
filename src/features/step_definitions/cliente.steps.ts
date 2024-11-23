@@ -1,27 +1,30 @@
 import { Given, When, Then, Before, After } from '@cucumber/cucumber';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { ClienteDTO } from '../../core/dto/produtoDTO';
 import assert from 'assert';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../../app.module';
+import { AppModule } from '../../app.module'; 
+import { ProdutoDTO } from '../../core/dto/produtoDTO';
 
 let app: INestApplication;
-let clienteDTO: ClienteDTO;
+let produtoDTO: ProdutoDTO;
 let response: any;
-let cpfPesquisa: string;
+let idProduto: string;
+let categoriaPesquisa: string;
 
-const CLIENTE1 = {
-  nome: 'Cliente de Teste',
-  email: 'cliente@teste.com',
-  cpf: '70234146061',
+const PRODUTO1: ProdutoDTO = {
+  nome: 'X-Salada',
+  descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+  categoria: 'LANCHE',
+  valor: 25,
   id: null,
 };
 
-const CLIENTE2 = {
-  nome: 'Cliente de Teste 2',
-  email: 'cliente2@teste.com',
-  cpf: '70234146062',
+const PRODUTO2: ProdutoDTO = {
+  nome: 'X-Burger',
+  descricao: 'Pão brioche, hamburger e queijo',
+  categoria: 'LANCHE',
+  valor: 20,
   id: null,
 };
 
@@ -38,119 +41,178 @@ After(async () => {
   await app.close();
 });
 
-Given('que cliente fornece um nome, email e CPF válidos', async () => {
-  clienteDTO = CLIENTE1;
+/**
+ * Cadastro de Produto
+ */
+Given('que o produto fornece dados válidos', async () => {
+  produtoDTO = PRODUTO1;
 });
 
-Given('que cliente fornece um CPF inválido', async () => {
-  clienteDTO = { ...CLIENTE1, cpf: '000' };
+Given('que o produto fornece um nome já cadastrado', async () => {
+  await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
+  produtoDTO = { ...PRODUTO1 };
 });
 
-Given('que cliente fornece um e-mail inválido', async () => {
-  clienteDTO = { ...CLIENTE1, email: 'email' };
+Given('que o produto fornece uma categoria inválida', async () => {
+  produtoDTO = { ...PRODUTO1, categoria: 'INVALIDA' };
 });
 
-Given('que cliente fornece um nome inválido', async () => {
-  clienteDTO = { ...CLIENTE1, nome: 'a' };
+Given('que o produto fornece um nome inválido', async () => {
+  produtoDTO = { ...PRODUTO1, nome: '' };
 });
 
-Given('que cliente fornece um CPF já cadastrado', async () => {
-  await request(app.getHttpServer()).post('/clientes').send(CLIENTE1);
-
-  clienteDTO = {
-    ...CLIENTE1,
-    email: CLIENTE2.email,
-  };
+Given('que o produto fornece um valor inválido', async () => {
+  produtoDTO = { ...PRODUTO1, valor: -10 };
 });
 
-Given('que cliente fornece um e-mail já cadastrado', async () => {
-  await request(app.getHttpServer()).post('/clientes').send(CLIENTE1);
-
-  clienteDTO = {
-    ...CLIENTE1,
-    cpf: CLIENTE2.cpf,
-  };
+When('o produto solicita o cadastro', async () => {
+  response = await request(app.getHttpServer()).post('/produtos').send(produtoDTO);
 });
 
-Given('que seja informado um CPF já cadastrado', async () => {
-  await request(app.getHttpServer()).post('/clientes').send(CLIENTE1);
-
-  cpfPesquisa = CLIENTE1.cpf;
-});
-
-Given('que seja informado um CPF não cadastrado', async () => {
-  cpfPesquisa = CLIENTE1.cpf;
-});
-
-When('o cliente solicita o cadastro', async () => {
-  response = await request(app.getHttpServer())
-    .post('/clientes')
-    .send(clienteDTO);
-});
-
-When('realizado a busca do cliente por CPF', async () => {
-  response = await request(app.getHttpServer())
-    .get('/clientes/' + cpfPesquisa)
-    .send();
-});
-
-Then('o cliente é cadastrado com sucesso', async () => {
+Then('o produto é cadastrado com sucesso', async () => {
   assert.equal(response.status, HttpStatus.CREATED);
 });
 
-Then('o sistema retorna um ID válido', async () => {
+Then('o sistema retorna um ID válido para o produto', async () => {
   assert.ok(response.body.id);
 });
 
-Then(
-  'uma exceção informando que o CPF já existe deve ser lançada',
-  async () => {
-    assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    assert.equal(response.body.message, 'CPF já cadastrado.');
-  },
-);
-
-Then(
-  'uma exceção informando que o e-mail já existe deve ser lançada',
-  async () => {
-    assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    assert.equal(response.body.message, 'E-mail já cadastrado.');
-  },
-);
-
-Then(
-  'uma exceção informando que o CPF é inválido deve ser lançada',
-  async () => {
-    assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    assert.equal(response.body.message, 'CPF inválido');
-  },
-);
-
-Then(
-  'uma exceção informando que o e-mail é inválido deve ser lançada',
-  async () => {
-    assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    assert.equal(response.body.message, 'e-mail inválido');
-  },
-);
-
-Then(
-  'uma exceção informando que o nome é inválido deve ser lançada',
-  async () => {
-    assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    assert.equal(response.body.message, 'Nome inválido');
-  },
-);
-
-Then('os dados do cliente cadastrado devem ser retornados', async () => {
-  assert.equal(response.status, HttpStatus.OK);
-  assert.equal(response.body.cpf, CLIENTE1.cpf);
+/**
+ * Listar Produtos
+ */
+Given('que existem produtos cadastrados no sistema', async () => {
+  await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
+  await request(app.getHttpServer()).post('/produtos').send(PRODUTO2);
 });
 
-Then(
-  'uma exceção informando que o cliente não foi encontrado deve ser lançada',
-  async () => {
-    assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    assert.equal(response.body.message, 'Cliente não encontrado.');
-  },
-);
+Given('que não existem produtos cadastrados no sistema', async () => {
+  // Garantindo que não há produtos cadastrados
+  response = await request(app.getHttpServer()).delete('/produtos');
+});
+
+When('o produto solicita a listagem de todos os produtos', async () => {
+  response = await request(app.getHttpServer()).get('/produtos').send();
+});
+
+Then('todos os produtos cadastrados devem ser retornados', async () => {
+  assert.equal(response.status, HttpStatus.OK);
+  assert.ok(response.body.length > 0);
+});
+
+Then('uma lista vazia deve ser retornada', async () => {
+  assert.equal(response.status, HttpStatus.OK);
+  assert.equal(response.body.length, 0);
+});
+
+/**
+ * Consultar Produto por Categoria
+ */
+Given('que a categoria de pesquisa é válida', async () => {
+  categoriaPesquisa = PRODUTO1.categoria;
+});
+
+Given('que a categoria de pesquisa não é válida', async () => {
+  categoriaPesquisa = 'INVALIDA';
+});
+
+When('o produto solicita a listagem de produtos por categoria', async () => {
+  response = await request(app.getHttpServer())
+    .get('/produtos/categoria?categoria=' + categoriaPesquisa)
+    .send();
+});
+
+Then('os produtos da categoria pesquisada devem ser retornados', async () => {
+  assert.equal(response.status, HttpStatus.OK);
+  assert.ok(response.body.length > 0);
+  response.body.forEach((produto: ProdutoDTO) => {
+    assert.equal(produto.categoria, categoriaPesquisa);
+  });
+});
+
+Then('uma exceção informando que a categoria não foi encontrada deve ser lançada', async () => {
+  assert.equal(response.status, HttpStatus.BAD_REQUEST);
+  assert.equal(response.body.message, 'Categoria não encontrada.');
+});
+
+/**
+ * Editar Produto
+ */
+Given('que o produto fornece um ID válido e dados atualizados', async () => {
+  const createdResponse = await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
+  idProduto = createdResponse.body.id;
+  produtoDTO = { ...PRODUTO1, id: idProduto, nome: 'X-Salada Atualizado' };
+});
+
+Given('que o produto fornece um ID inexistente', async () => {
+  produtoDTO = { ...PRODUTO1, id: 'inexistente' };
+});
+
+Given('que o produto fornece um ID inválido', async () => {
+  produtoDTO = { ...PRODUTO1, id: '' };
+});
+
+Given('que o produto fornece dados inválidos', async () => {
+  const createdResponse = await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
+  idProduto = createdResponse.body.id;
+  produtoDTO = { ...PRODUTO1, id: idProduto, nome: '' };
+});
+
+When('o produto solicita a edição', async () => {
+  response = await request(app.getHttpServer())
+    .put('/produtos/' + produtoDTO.id)
+    .send(produtoDTO);
+});
+
+Then('o produto é atualizado com sucesso', async () => {
+  assert.equal(response.status, HttpStatus.OK);
+  assert.equal(response.body.nome, 'X-Salada Atualizado');
+});
+
+Then('uma exceção informando que o produto não foi encontrado deve ser lançada', async () => {
+  assert.equal(response.status, HttpStatus.BAD_REQUEST);
+  assert.equal(response.body.message, 'Produto não encontrado.');
+});
+
+Then('uma exceção informando que o ID é inválido deve ser lançada', async () => {
+  assert.equal(response.status, HttpStatus.BAD_REQUEST);
+  assert.equal(response.body.message, 'ID inválido.');
+});
+
+Then('uma exceção informando que os dados são inválidos deve ser lançada', async () => {
+  assert.equal(response.status, HttpStatus.BAD_REQUEST);
+  assert.equal(response.body.message, 'Dados inválidos.');
+});
+
+/**
+ * Deletar Produto
+ */
+Given('que o produto fornece um ID válido', async () => {
+  const createdResponse = await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
+  idProduto = createdResponse.body.id;
+});
+
+Given('que o produto fornece um ID inexistente', async () => {
+  idProduto = 'inexistente';
+});
+
+Given('que o produto fornece um ID inválido', async () => {
+  idProduto = '';
+});
+
+When('o produto solicita a exclusão', async () => {
+  response = await request(app.getHttpServer()).delete('/produtos/' + idProduto).send();
+});
+
+Then('o produto é excluído com sucesso', async () => {
+  assert.equal(response.status, HttpStatus.OK);
+});
+
+Then('uma exceção informando que o produto não foi encontrado deve ser lançada', async () => {
+  assert.equal(response.status, HttpStatus.BAD_REQUEST);
+  assert.equal(response.body.message, 'Produto não encontrado.');
+});
+
+Then('uma exceção informando que o ID é inválido deve ser lançada', async () => {
+  assert.equal(response.status, HttpStatus.BAD_REQUEST);
+  assert.equal(response.body.message, 'ID inválido.');
+});
