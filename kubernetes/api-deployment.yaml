@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fiap-clientes-api-deployment
-  namespace: fiap-clientes-api
+  name: fiap-produto-api-deployment
+  namespace: fiap-produto-api
   labels:
-    app: fiap-clientes-api
+    app: fiap-produto-api
 spec:
   template:
     metadata:
-      name: fiap-clientes-api-deployment
+      name: fiap-produto-api-deployment
       labels:
-        app: fiap-clientes-api-deployment
+        app: fiap-produto-api-deployment
     spec:
       containers:
-        - name: fiap-clientes-api-deployment-container
-          image: jacksoncarbonera/fiap-clientes-api
+        - name: fiap-produto-api-deployment-container
+          image: jacksoncarbonera/fiap-produto-api
           ports:
             - containerPort: 3000
           envFrom:
           - configMapRef:
-              name: fiap-clientes-api-config 
+              name: fiap-produto-api-config 
           - secretRef:
-             name: fiap-clientes-api-secret
+             name: fiap-produto-api-secret
           livenessProbe:
             httpGet:
               path: /health
@@ -46,4 +46,4 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fiap-clientes-api-deployment
+      app: fiap-produto-api-deployment

@@ -30,7 +30,7 @@ describe('Testes de Integração', () => {
       .expect(HttpStatus.CREATED);
   });
 
-  it('Deve buscar os dados do cliente', async () => {
+  it('Deve buscar os dados do produto', async () => {
     await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
 
     return await request(app.getHttpServer())

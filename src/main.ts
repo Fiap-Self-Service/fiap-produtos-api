@@ -7,9 +7,9 @@ export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('fiap-clientes-api')
+    .setTitle('fiap-produto-api')
     .setDescription(
-      'Microsservico responsável pela gestão do domínio de clientes',
+      'Microsservico responsável pela gestão do domínio de produto',
     )
     .setVersion('1.0')
     .build();
