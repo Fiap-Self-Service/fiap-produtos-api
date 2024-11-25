@@ -7,7 +7,7 @@ import { DeleteResult } from 'typeorm';
 
 describe('ProdutoRepository', () => {
   let produtoRepository: ProdutoRepository;
-  let mockRepository: jest.Mocked<Repository<ProdutoEntity>>;
+  let mockRepository: Repository<ProdutoEntity>;
 
   beforeEach(async () => {
     // Mock do repositório TypeORM
@@ -16,11 +16,14 @@ describe('ProdutoRepository', () => {
       find: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
-    } as unknown as jest.Mocked<Repository<ProdutoEntity>>;
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ProdutoRepository,
+        {
+          provide: ProdutoRepository,
+          useValue: new ProdutoRepository(mockRepository), // instanciando manualmente a classe, passando mock do banco de dados
+        },
         { provide: getRepositoryToken(ProdutoEntity), useValue: mockRepository },
       ],
     }).compile();
@@ -38,7 +41,7 @@ describe('ProdutoRepository', () => {
         valor: 25,
       };
 
-      mockRepository.findOneBy.mockResolvedValue(produtoMock);
+      (mockRepository.findOneBy as jest.Mock).mockResolvedValue(produtoMock);
 
       const result = await produtoRepository.buscarProdutoPorID('produto-id');
 
@@ -47,7 +50,7 @@ describe('ProdutoRepository', () => {
     });
 
     it('Deve retornar null se o produto não for encontrado', async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      (mockRepository.findOneBy as jest.Mock).mockResolvedValue(null);
 
       const result = await produtoRepository.buscarProdutoPorID('produto-inexistente');
 
@@ -75,7 +78,7 @@ describe('ProdutoRepository', () => {
         },
       ];
 
-      mockRepository.find.mockResolvedValue(produtosMock);
+      (mockRepository.find as jest.Mock).mockResolvedValue(produtosMock);
 
       const result = await produtoRepository.listarProdutos();
 
@@ -84,7 +87,7 @@ describe('ProdutoRepository', () => {
     });
 
     it('Deve retornar uma lista vazia se não houver produtos cadastrados', async () => {
-      mockRepository.find.mockResolvedValue([]);
+      (mockRepository.find as jest.Mock).mockResolvedValue([]);
 
       const result = await produtoRepository.listarProdutos();
 
@@ -103,7 +106,7 @@ describe('ProdutoRepository', () => {
         valor: 25,
       };
 
-      mockRepository.save.mockResolvedValue(produtoMock);
+      (mockRepository.save as jest.Mock).mockResolvedValue(produtoMock);
 
       const result = await produtoRepository.cadastrarProduto(produtoMock);
 
@@ -122,7 +125,7 @@ describe('ProdutoRepository', () => {
         valor: 30,
       };
 
-      mockRepository.save.mockResolvedValue(produtoMock);
+      (mockRepository.save as jest.Mock).mockResolvedValue(produtoMock);
 
       const result = await produtoRepository.editarProduto(produtoMock);
 
@@ -138,7 +141,7 @@ describe('ProdutoRepository', () => {
         affected: 1,
       };
 
-      mockRepository.delete.mockResolvedValue(deleteResult);
+      (mockRepository.delete as jest.Mock).mockResolvedValue(deleteResult);
 
       await produtoRepository.deletarProduto('produto-id');
 
@@ -151,7 +154,7 @@ describe('ProdutoRepository', () => {
         affected: 0,
       };
 
-      mockRepository.delete.mockResolvedValue(deleteResult);
+      (mockRepository.delete as jest.Mock).mockResolvedValue(deleteResult);
 
       await produtoRepository.deletarProduto('produto-inexistente');
 
@@ -171,7 +174,7 @@ describe('ProdutoRepository', () => {
         },
       ];
 
-      mockRepository.find.mockResolvedValue(produtosMock);
+      (mockRepository.find as jest.Mock).mockResolvedValue(produtosMock);
 
       const result = await produtoRepository.buscarProdutoPorCategoria('LANCHE');
 
@@ -180,7 +183,7 @@ describe('ProdutoRepository', () => {
     });
 
     it('Deve retornar uma lista vazia se nenhum produto for encontrado para a categoria', async () => {
-      mockRepository.find.mockResolvedValue([]);
+      (mockRepository.find as jest.Mock).mockResolvedValue([]);
 
       const result = await produtoRepository.buscarProdutoPorCategoria('BEBIDA');
 

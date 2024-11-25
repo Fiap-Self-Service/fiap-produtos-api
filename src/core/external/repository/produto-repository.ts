@@ -7,7 +7,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 @Injectable()
 export class ProdutoRepository implements IProdutoRepository {
   constructor(
-    @Inject(getRepositoryToken(ProdutoEntity))
+    @Inject('PRODUTO_REPOSITORY')
     private produtoRepository: Repository<ProdutoEntity>
   ) {}
 

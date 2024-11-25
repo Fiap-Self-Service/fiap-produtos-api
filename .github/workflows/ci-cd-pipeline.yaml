@@ -66,8 +66,8 @@ jobs:
 
      - name: Build and push Docker image
        run: |
-         docker build -t jacksoncarbonera/fiap-clientes-api .
-         docker push jacksoncarbonera/fiap-clientes-api
+         docker build -t jacksoncarbonera/fiap-produtos-api .
+         docker push jacksoncarbonera/fiap-produtos-api
     
   deploy-aws:
     runs-on: ubuntu-latest

@@ -9,13 +9,15 @@ import { DeletarProdutoUseCase } from "./core/use-cases/deletar-produto-use-case
 import { DataSource } from "typeorm";
 import { ProdutoEntity } from "./core/external/repository/produto.entity";
 import { ProdutoAPIController } from "./core/external/api/produto-api.controller";
-import { DatabaseModule } from "src/infrastructure/database/database.module";
+import { DatabaseModule } from "./infrastructure/database/database.module";
 import { IProdutoRepository } from "./core/external/repository/produto-repository.interface";
 import { CadastrarProdutoController } from "./core/adapters/controllers/cadastrar-produto-controller";
 import { BuscarProdutoPorCategoriaController } from "./core/adapters/controllers/buscar-produto-por-categoria-controller";
 import { ListarProdutoController } from "./core/adapters/controllers/listar-produto-controller";
 import { EditarProdutoController } from "./core/adapters/controllers/editar-produto-controller";
 import { DeletarProdutoController } from "./core/adapters/controllers/deletar-produto-controller";
+import { ConfigModule } from "@nestjs/config";
+import { HealthModule } from "./infrastructure/health/health.module";
 
 @Module({
   providers: [
@@ -49,7 +51,13 @@ import { DeletarProdutoController } from "./core/adapters/controllers/deletar-pr
     },
   ],
   controllers: [ProdutoAPIController],
-  imports: [DatabaseModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    HealthModule,
+    DatabaseModule,
+  ],
   exports: [ProdutoGateway]
 })
 export class AppModule {}
