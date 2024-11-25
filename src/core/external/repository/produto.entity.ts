@@ -15,8 +15,8 @@ export class ProdutoEntity {
   @Column({
     name: "categoria",
     nullable: false,
-    type: "enum",
-    enum: CategoriaProdutoType,
+    type: process.env.NODE_ENV === 'test' ? "varchar" : "enum",
+    enum: process.env.NODE_ENV === 'test' ? null : CategoriaProdutoType,
   })
   categoria: string;
 

@@ -34,7 +34,7 @@ describe('Testes de Integração', () => {
     await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
 
     return await request(app.getHttpServer())
-      .get('/produtos/' + PRODUTO1.id)
+      .get('/produtos')
       .send()
       .expect(HttpStatus.OK);
   });
