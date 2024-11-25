@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EditarProdutoUseCase } from './editar-produto-use-case'; 
-import { ProdutoGateway } from '../../core/adapters/gateways/produto-gateway'; 
-import { ProdutoDTO } from '../../core/dto/produtoDTO'; 
-import { Produto } from '../../core/entities/produto'; 
+import { ProdutoGateway } from '../adapters/gateways/produto-gateway'; 
+import { ProdutoDTO } from '../dto/produtoDTO'; 
+import { Produto } from '../entities/produto'; 
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('EditarProdutoUseCase', () => {

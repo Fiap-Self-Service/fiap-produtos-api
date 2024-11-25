@@ -3,27 +3,25 @@ import { ProdutoRepository } from './produto-repository';
 import { Repository } from 'typeorm';
 import { ProdutoEntity } from './produto.entity'; 
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { CategoriaProdutoType } from '../../dto/categoria-produto-type-enum';
+import { DeleteResult } from 'typeorm';
 
 describe('ProdutoRepository', () => {
   let produtoRepository: ProdutoRepository;
   let mockRepository: jest.Mocked<Repository<ProdutoEntity>>;
 
   beforeEach(async () => {
-    // Criando o mock para o repositório TypeORM
+    // Mock do repositório TypeORM
     mockRepository = {
       findOneBy: jest.fn(),
       find: jest.fn(),
       save: jest.fn(),
+      delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<ProdutoEntity>>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProdutoRepository,
-        {
-          provide: getRepositoryToken(ProdutoEntity),
-          useValue: mockRepository,
-        },
+        { provide: getRepositoryToken(ProdutoEntity), useValue: mockRepository },
       ],
     }).compile();
 
@@ -31,7 +29,7 @@ describe('ProdutoRepository', () => {
   });
 
   describe('buscarProdutoPorID', () => {
-    it('Deve chamar o método findOne e retornar o produto correto', async () => {
+    it('Deve retornar o produto quando um ID válido for fornecido', async () => {
       const produtoMock: ProdutoEntity = {
         id: 'produto-id',
         nome: 'X-Salada',
@@ -58,8 +56,8 @@ describe('ProdutoRepository', () => {
     });
   });
 
-  describe('buscarProdutoPorCategoria', () => {
-    it('Deve chamar o método find e retornar os produtos corretos', async () => {
+  describe('listarProdutos', () => {
+    it('Deve retornar todos os produtos cadastrados', async () => {
       const produtosMock: ProdutoEntity[] = [
         {
           id: 'produto-id-1',
@@ -79,28 +77,24 @@ describe('ProdutoRepository', () => {
 
       mockRepository.find.mockResolvedValue(produtosMock);
 
-      const result = await produtoRepository.buscarProdutoPorCategoria('LANCHE');
+      const result = await produtoRepository.listarProdutos();
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { categoria: 'LANCHE' },
-      });
+      expect(mockRepository.find).toHaveBeenCalled();
       expect(result).toEqual(produtosMock);
     });
 
-    it('Deve retornar uma lista vazia se nenhum produto for encontrado', async () => {
+    it('Deve retornar uma lista vazia se não houver produtos cadastrados', async () => {
       mockRepository.find.mockResolvedValue([]);
 
-      const result = await produtoRepository.buscarProdutoPorCategoria('BEBIDA');
+      const result = await produtoRepository.listarProdutos();
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { categoria: 'BEBIDA' },
-      });
+      expect(mockRepository.find).toHaveBeenCalled();
       expect(result).toEqual([]);
     });
   });
 
-  describe('salvarProduto', () => {
-    it('Deve chamar o método save e retornar o produto salvo', async () => {
+  describe('cadastrarProduto', () => {
+    it('Deve salvar o produto e retorná-lo', async () => {
       const produtoMock: ProdutoEntity = {
         id: 'produto-id',
         nome: 'X-Salada',
@@ -115,6 +109,83 @@ describe('ProdutoRepository', () => {
 
       expect(mockRepository.save).toHaveBeenCalledWith(produtoMock);
       expect(result).toEqual(produtoMock);
+    });
+  });
+
+  describe('editarProduto', () => {
+    it('Deve editar o produto e retorná-lo', async () => {
+      const produtoMock: ProdutoEntity = {
+        id: 'produto-id',
+        nome: 'X-Salada Atualizado',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
+        valor: 30,
+      };
+
+      mockRepository.save.mockResolvedValue(produtoMock);
+
+      const result = await produtoRepository.editarProduto(produtoMock);
+
+      expect(mockRepository.save).toHaveBeenCalledWith(produtoMock);
+      expect(result).toEqual(produtoMock);
+    });
+  });
+
+  describe('deletarProduto', () => {
+    it('Deve deletar o produto quando um ID válido for fornecido', async () => {
+      const deleteResult: DeleteResult = {
+        raw: {},
+        affected: 1,
+      };
+
+      mockRepository.delete.mockResolvedValue(deleteResult);
+
+      await produtoRepository.deletarProduto('produto-id');
+
+      expect(mockRepository.delete).toHaveBeenCalledWith('produto-id');
+    });
+
+    it('Não deve lançar erro mesmo se nenhum produto for deletado', async () => {
+      const deleteResult: DeleteResult = {
+        raw: {},
+        affected: 0,
+      };
+
+      mockRepository.delete.mockResolvedValue(deleteResult);
+
+      await produtoRepository.deletarProduto('produto-inexistente');
+
+      expect(mockRepository.delete).toHaveBeenCalledWith('produto-inexistente');
+    });
+  });
+
+  describe('buscarProdutoPorCategoria', () => {
+    it('Deve retornar os produtos da categoria especificada', async () => {
+      const produtosMock: ProdutoEntity[] = [
+        {
+          id: 'produto-id-1',
+          nome: 'X-Salada',
+          descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+          categoria: 'LANCHE',
+          valor: 25,
+        },
+      ];
+
+      mockRepository.find.mockResolvedValue(produtosMock);
+
+      const result = await produtoRepository.buscarProdutoPorCategoria('LANCHE');
+
+      expect(mockRepository.find).toHaveBeenCalledWith({ where: { categoria: 'LANCHE' } });
+      expect(result).toEqual(produtosMock);
+    });
+
+    it('Deve retornar uma lista vazia se nenhum produto for encontrado para a categoria', async () => {
+      mockRepository.find.mockResolvedValue([]);
+
+      const result = await produtoRepository.buscarProdutoPorCategoria('BEBIDA');
+
+      expect(mockRepository.find).toHaveBeenCalledWith({ where: { categoria: 'BEBIDA' } });
+      expect(result).toEqual([]);
     });
   });
 });

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ListarProdutoUseCase } from './listar-produto-use-case'; 
-import { ProdutoGateway } from '../../core/adapters/gateways/produto-gateway'; 
-import { Produto } from '../../core/entities/produto'; 
+import { ProdutoGateway } from '../adapters/gateways/produto-gateway'; 
+import { Produto } from '../entities/produto'; 
 
 describe('ListarProdutoUseCase', () => {
   let listarProdutoUseCase: ListarProdutoUseCase;

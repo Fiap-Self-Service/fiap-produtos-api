@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DeletarProdutoUseCase } from './deletar-produto-use-case'; 
-import { ProdutoGateway } from '../../core/adapters/gateways/produto-gateway'; 
+import { ProdutoGateway } from '../adapters/gateways/produto-gateway'; 
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Produto } from '../../core/entities/produto'; 
+import { Produto } from '../entities/produto'; 
 
 describe('DeletarProdutoUseCase', () => {
   let deletarProdutoUseCase: DeletarProdutoUseCase;

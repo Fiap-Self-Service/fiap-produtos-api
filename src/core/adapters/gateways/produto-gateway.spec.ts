@@ -1,31 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProdutoGateway } from './produto-gateway'; // Ajuste o caminho conforme necessário
-import { IProdutoRepository } from '../../external/repository/produto-repository.interface'; // Ajuste o caminho conforme necessário
-import { Produto } from '../../entities/produto'; // Ajuste o caminho conforme necessário
+import { ProdutoGateway } from './produto-gateway'; 
+import { IProdutoRepository } from '../../external/repository/produto-repository.interface'; 
+import { Produto } from '../../entities/produto'; 
 
 describe('ProdutoGateway', () => {
   let produtoGateway: ProdutoGateway;
-  let produtoRepository: IProdutoRepository;
+  let produtoRepository: jest.Mocked<IProdutoRepository>;
 
   beforeEach(async () => {
-    // Criando o mock do repositório
-    const mockProdutoRepository = {
-      adquirirPorID: jest.fn(),
-      adquirirPorCategoria: jest.fn(),
-      salvarProduto: jest.fn(),
+    // Mock do ProdutoRepository
+    produtoRepository = {
+      buscarProdutoPorID: jest.fn(),
+      listarProdutos: jest.fn(),
+      cadastrarProduto: jest.fn(),
+      editarProduto: jest.fn(),
+      deletarProduto: jest.fn(),
+      buscarProdutoPorCategoria: jest.fn(),
     };
 
-    // Criando o módulo de teste e injetando as dependências mockadas
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProdutoGateway,
-        { provide: IProdutoRepository, useValue: mockProdutoRepository },
+        { provide: IProdutoRepository, useValue: produtoRepository },
       ],
     }).compile();
 
-    // Obtendo as instâncias do gateway e do repositório
     produtoGateway = module.get<ProdutoGateway>(ProdutoGateway);
-    produtoRepository = module.get<IProdutoRepository>(IProdutoRepository);
   });
 
   describe('buscarProdutoPorID', () => {
@@ -33,77 +33,114 @@ describe('ProdutoGateway', () => {
       const produtoMock: Produto = {
         id: 'produto-id',
         nome: 'X-Salada',
-        descricao: 'Pao brioche, hamburger, queijo, alface e tomate',
-        categoria: 'Lanches',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
         valor: 25,
       };
 
-      // Mockando o comportamento do repositório
-      (produtoRepository.buscarProdutoPorID as jest.Mock).mockResolvedValue(
-        produtoMock,
-      );
+      produtoRepository.buscarProdutoPorID.mockResolvedValue(produtoMock);
 
       const result = await produtoGateway.buscarProdutoPorID('produto-id');
 
-      // Verificando se o método foi chamado corretamente
-      expect(produtoRepository.buscarProdutoPorID).toHaveBeenCalledWith(
-        'produto-id',
-      );
-
-      // Verificando se o resultado é o esperado
+      expect(produtoRepository.buscarProdutoPorID).toHaveBeenCalledWith('produto-id');
       expect(result).toEqual(produtoMock);
     });
   });
 
-  describe('buscarProdutoPorCategoria', () => {
-    it('Deve chamar o método buscarProdutoPorCategoria do repositório e retornar o produto', async () => {
-      const produtoMock: Produto = {
-        id: 'produto-id',
-        nome: 'X-Salada',
-        descricao: 'Pao brioche, hamburger, queijo, alface e tomate',
-        categoria: 'Lanches',
-        valor: 25,
-      };
+  describe('listarProdutos', () => {
+    it('Deve chamar o método listarProdutos do repositório e retornar os produtos', async () => {
+      const produtosMock: Produto[] = [
+        {
+          id: 'produto-id-1',
+          nome: 'X-Salada',
+          descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+          categoria: 'LANCHE',
+          valor: 25,
+        },
+        {
+          id: 'produto-id-2',
+          nome: 'X-Bacon',
+          descricao: 'Pão brioche, hamburger, queijo, bacon e molho especial',
+          categoria: 'LANCHE',
+          valor: 30,
+        },
+      ];
 
-      // Mockando o comportamento do repositório
-      (produtoRepository.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue(
-        produtoMock,
-      );
+      produtoRepository.listarProdutos.mockResolvedValue(produtosMock);
 
-      const result = await produtoGateway.buscarProdutoPorCategoria('Lanches');
+      const result = await produtoGateway.listarProdutos();
 
-      // Verificando se o método foi chamado corretamente
-      expect(produtoRepository.buscarProdutoPorCategoria).toHaveBeenCalledWith(
-        'Lanches',
-      );
-
-      // Verificando se o resultado é o esperado
-      expect(result).toEqual(produtoMock);
+      expect(produtoRepository.listarProdutos).toHaveBeenCalled();
+      expect(result).toEqual(produtosMock);
     });
   });
 
   describe('cadastrarProduto', () => {
-    it('Deve chamar o método cadastrarProduto do repositório e retornar o produto salvo', async () => {
+    it('Deve chamar o método cadastrarProduto do repositório e retornar o produto cadastrado', async () => {
       const produtoMock: Produto = {
         id: 'produto-id',
         nome: 'X-Salada',
-        descricao: 'Pao brioche, hamburger, queijo, alface e tomate',
-        categoria: 'Lanches',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
         valor: 25,
       };
 
-      // Mockando o comportamento do repositório
-      (produtoRepository.cadastrarProduto as jest.Mock).mockResolvedValue(
-        produtoMock,
-      );
+      produtoRepository.cadastrarProduto.mockResolvedValue(produtoMock);
 
       const result = await produtoGateway.cadastrarProduto(produtoMock);
 
-      // Verificando se o método foi chamado corretamente
       expect(produtoRepository.cadastrarProduto).toHaveBeenCalledWith(produtoMock);
-
-      // Verificando se o resultado é o esperado
       expect(result).toEqual(produtoMock);
+    });
+  });
+
+  describe('editarProduto', () => {
+    it('Deve chamar o método editarProduto do repositório e retornar o produto editado', async () => {
+      const produtoMock: Produto = {
+        id: 'produto-id',
+        nome: 'X-Salada Atualizado',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
+        valor: 30,
+      };
+
+      produtoRepository.editarProduto.mockResolvedValue(produtoMock);
+
+      const result = await produtoGateway.editarProduto(produtoMock);
+
+      expect(produtoRepository.editarProduto).toHaveBeenCalledWith(produtoMock);
+      expect(result).toEqual(produtoMock);
+    });
+  });
+
+  describe('deletarProduto', () => {
+    it('Deve chamar o método deletarProduto do repositório', async () => {
+      produtoRepository.deletarProduto.mockResolvedValue(undefined);
+
+      await produtoGateway.deletarProduto('produto-id');
+
+      expect(produtoRepository.deletarProduto).toHaveBeenCalledWith('produto-id');
+    });
+  });
+
+  describe('buscarProdutoPorCategoria', () => {
+    it('Deve chamar o método buscarProdutoPorCategoria do repositório e retornar os produtos', async () => {
+      const produtosMock: Produto[] = [
+        {
+          id: 'produto-id-1',
+          nome: 'X-Salada',
+          descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+          categoria: 'LANCHE',
+          valor: 25,
+        },
+      ];
+
+      produtoRepository.buscarProdutoPorCategoria.mockResolvedValue(produtosMock);
+
+      const result = await produtoGateway.buscarProdutoPorCategoria('LANCHE');
+
+      expect(produtoRepository.buscarProdutoPorCategoria).toHaveBeenCalledWith('LANCHE');
+      expect(result).toEqual(produtosMock);
     });
   });
 });
