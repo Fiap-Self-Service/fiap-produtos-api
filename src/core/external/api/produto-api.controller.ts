@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Produto } from "src/core/entities/produto";
 import { ProdutoDTO } from "../../dto/produtoDTO";
 import { CategoriaProdutoType } from "../../dto/categoria-produto-type-enum";
 import { CadastrarProdutoController } from "../../adapters/controllers/cadastrar-produto-controller";
@@ -7,6 +8,7 @@ import { ListarProdutoController } from "../../adapters/controllers/listar-produ
 import { EditarProdutoController } from "../../adapters/controllers/editar-produto-controller";
 import { DeletarProdutoController } from "../../adapters/controllers/deletar-produto-controller";
 import { BuscarProdutoPorCategoriaController } from "../../adapters/controllers/buscar-produto-por-categoria-controller";
+import { ConsultarProdutoPorIDController } from "../../adapters/controllers/consultar-produto-id-controller";
 
 @ApiTags('Produtos')
 @Controller('produtos')
@@ -18,6 +20,7 @@ export class ProdutoAPIController{
         private readonly listarProdutoController: ListarProdutoController,
         private readonly editarProdutoController: EditarProdutoController,
         private readonly deletarProdutoController: DeletarProdutoController,
+        private readonly consultarProdutoPorIDController: ConsultarProdutoPorIDController,
     ){}
 
     @ApiOperation({
@@ -53,6 +56,17 @@ export class ProdutoAPIController{
     @ApiQuery({name: 'categoria', enum: CategoriaProdutoType})
     async buscarProdutoPorCategoria(@Query('categoria') categoria: CategoriaProdutoType): Promise<ProdutoDTO[]> {
         return await this.buscarProdutoPorCategoriaController.execute(categoria);
+    }
+
+    @Get('/:id')
+    @ApiOperation({
+      summary: 'Buscar Produto por ID', 
+      description: 'Verifica se o ID informado está cadastrado e retorna os dados do Produto.',
+    })
+    @ApiResponse({ status: 200, description: 'Produto encontrado.' })
+    @ApiResponse({ status: 400, description: 'Produto não encontrado.' })
+    async buscarProdutoPorID(@Param('id') id: string): Promise<Produto> {
+      return await this.consultarProdutoPorIDController.execute(id);
     }
 
     @ApiOperation({

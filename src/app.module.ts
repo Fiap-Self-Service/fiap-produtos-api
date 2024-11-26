@@ -18,6 +18,8 @@ import { EditarProdutoController } from "./core/adapters/controllers/editar-prod
 import { DeletarProdutoController } from "./core/adapters/controllers/deletar-produto-controller";
 import { ConfigModule } from "@nestjs/config";
 import { HealthModule } from "./infrastructure/health/health.module";
+import { ConsultarProdutoPorIDController } from "./core/adapters/controllers/consultar-produto-id-controller";
+import { ConsultarProdutoPorIDUseCase } from "./core/use-cases/consultar-produto-id-use-case";
 
 @Module({
   providers: [
@@ -30,6 +32,7 @@ import { HealthModule } from "./infrastructure/health/health.module";
     ListarProdutoUseCase,
     EditarProdutoUseCase,
     DeletarProdutoUseCase,
+    ConsultarProdutoPorIDUseCase,
 
     // controllers
     CadastrarProdutoController,
@@ -37,6 +40,7 @@ import { HealthModule } from "./infrastructure/health/health.module";
     ListarProdutoController,
     EditarProdutoController,
     DeletarProdutoController,
+    ConsultarProdutoPorIDController,
 
     // external repository
     {
