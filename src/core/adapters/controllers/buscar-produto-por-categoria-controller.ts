@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ProdutoDTO } from '../../dto/produtoDTO';
 import { ProdutoGateway } from '../gateways/produto-gateway';
 import { BuscarProdutoPorCategoriaUseCase } from '../../use-cases/buscar-produto-por-categoria-use-case';
@@ -12,6 +12,11 @@ export class BuscarProdutoPorCategoriaController {
   ) {}
 
   async execute(categoriaId: string): Promise<ProdutoDTO[]> {
+    const produtos = await this.produtoGateway.buscarProdutoPorCategoria(categoriaId);
+
+    if (!produtos || produtos.length === 0) {
+      throw new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST);
+    }
 
     return await this.buscarProdutoUseCase.execute(this.produtoGateway, categoriaId);
 
