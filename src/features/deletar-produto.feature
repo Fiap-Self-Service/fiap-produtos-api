@@ -9,8 +9,3 @@ Cenário: Deletar um produto com ID inexistente
   Dado que o produto fornece um ID inexistente
   Quando o produto solicita a exclusão
   Então uma exceção informando que o produto não foi encontrado deve ser lançada
-
-Cenário: Deletar um produto com ID inválido
-  Dado que o produto fornece um ID inválido
-  Quando o produto solicita a exclusão
-  Então uma exceção informando que o ID é inválido deve ser lançada

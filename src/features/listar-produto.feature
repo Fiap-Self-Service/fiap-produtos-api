@@ -8,4 +8,4 @@ Cenário: Listar todos os produtos com sucesso
 Cenário: Listar produtos com o sistema vazio
   Dado que não existem produtos cadastrados no sistema
   Quando o produto solicita a listagem de todos os produtos
-  Então uma lista vazia deve ser retornada
+  Então uma lista sem dados deve ser retornada
