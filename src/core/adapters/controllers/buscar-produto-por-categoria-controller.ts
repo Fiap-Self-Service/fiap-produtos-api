@@ -15,7 +15,8 @@ export class BuscarProdutoPorCategoriaController {
     const produtos = await this.produtoGateway.buscarProdutoPorCategoria(categoriaId);
 
     if (!produtos || produtos.length === 0) {
-      throw new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST);
+      
+      return [];
     }
 
     return await this.buscarProdutoUseCase.execute(this.produtoGateway, categoriaId);

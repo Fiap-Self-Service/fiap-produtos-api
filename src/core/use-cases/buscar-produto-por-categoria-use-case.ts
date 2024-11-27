@@ -6,6 +6,7 @@ import { Produto } from "../entities/produto";
 export class BuscarProdutoPorCategoriaUseCase {
   
   async execute(produtoGateway: ProdutoGateway, categoriaId: string): Promise<Produto[]> {
-    return await produtoGateway.buscarProdutoPorCategoria(categoriaId);
+    const produtos =  await produtoGateway.buscarProdutoPorCategoria(categoriaId);
+    return produtos || [];
   }
 }
