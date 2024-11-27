@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Produto } from "src/core/entities/produto";
 import { ProdutoDTO } from "../../dto/produtoDTO";
@@ -77,6 +77,14 @@ export class ProdutoAPIController{
     @ApiResponse({ status: 400, description: 'Produto não encontrado.' })
     @Put('/:id')
     async editarProduto(@Param('id') id: string, @Body() produtoDTO: ProdutoDTO){
+        // Validação adicional para os dados do produto
+        if (!produtoDTO.nome || produtoDTO.nome.trim().length < 3) {
+            throw new HttpException('Dados inválidos.', HttpStatus.BAD_REQUEST);
+        }
+
+        if (!produtoDTO.valor || produtoDTO.valor <= 0) {
+            throw new HttpException('Valor inválido.', HttpStatus.BAD_REQUEST);
+        }
         return await this.editarProdutoController.execute({id, ...produtoDTO});
     }
 
