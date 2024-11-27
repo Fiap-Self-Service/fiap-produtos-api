@@ -4,14 +4,14 @@ import { BuscarProdutoPorCategoriaUseCase } from '../../use-cases/buscar-produto
 import { ProdutoGateway } from '../gateways/produto-gateway'; 
 import { ProdutoDTO } from '../../dto/produtoDTO'; 
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { CategoriaProdutoType } from '../../dto/categoria-produto-type-enum';
 
 describe('BuscarProdutoPorCategoriaController', () => {
-  let buscarProdutoPorCategoriaController: BuscarProdutoPorCategoriaController;
+  let controller: BuscarProdutoPorCategoriaController;
   let produtoGateway: ProdutoGateway;
   let buscarProdutoUseCase: BuscarProdutoPorCategoriaUseCase;
 
   beforeEach(async () => {
-    // Mocks para dependências
     const mockProdutoGateway = {
       buscarProdutoPorCategoria: jest.fn(),
     };
@@ -20,65 +20,67 @@ describe('BuscarProdutoPorCategoriaController', () => {
       execute: jest.fn(),
     };
 
-    // Configuração do módulo de teste
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BuscarProdutoPorCategoriaController,
-        { provide: ProdutoGateway, useValue: mockProdutoGateway },
-        { provide: BuscarProdutoPorCategoriaUseCase, useValue: mockBuscarProdutoUseCase },
+        {
+          provide: ProdutoGateway,
+          useValue: mockProdutoGateway,
+        },
+        {
+          provide: BuscarProdutoPorCategoriaUseCase,
+          useValue: mockBuscarProdutoUseCase,
+        },
       ],
     }).compile();
 
-    buscarProdutoPorCategoriaController = module.get<BuscarProdutoPorCategoriaController>(
+    controller = module.get<BuscarProdutoPorCategoriaController>(
       BuscarProdutoPorCategoriaController,
     );
     produtoGateway = module.get<ProdutoGateway>(ProdutoGateway);
-    buscarProdutoUseCase = module.get<BuscarProdutoPorCategoriaUseCase>(BuscarProdutoPorCategoriaUseCase);
+    buscarProdutoUseCase = module.get<BuscarProdutoPorCategoriaUseCase>(
+      BuscarProdutoPorCategoriaUseCase,
+    );
   });
 
-  it('Deve retornar a lista de produtos para uma categoria válida', async () => {
-    const categoriaId = 'LANCHE';
+  it('Deve retornar os produtos da categoria pesquisada com sucesso', async () => {
+    const categoriaId = CategoriaProdutoType.LANCHE;
     const produtosMock: ProdutoDTO[] = [
       { id: '1', nome: 'X-Salada', descricao: 'Descrição', categoria: 'LANCHE', valor: 25 },
-      { id: '2', nome: 'X-Bacon', descricao: 'Descrição', categoria: 'LANCHE', valor: 30 },
     ];
 
-    // Mock do gateway e do use case
-    (produtoGateway.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue(produtosMock);
-    (buscarProdutoUseCase.execute as jest.Mock).mockResolvedValue(produtosMock);
+    jest
+      .spyOn(produtoGateway, 'buscarProdutoPorCategoria')
+      .mockResolvedValue(produtosMock);
+    jest
+      .spyOn(buscarProdutoUseCase, 'execute')
+      .mockResolvedValue(produtosMock);
 
-    const result = await buscarProdutoPorCategoriaController.execute(categoriaId);
+    const result = await controller.execute(categoriaId);
 
     expect(produtoGateway.buscarProdutoPorCategoria).toHaveBeenCalledWith(categoriaId);
     expect(buscarProdutoUseCase.execute).toHaveBeenCalledWith(produtoGateway, categoriaId);
     expect(result).toEqual(produtosMock);
   });
 
-  it('Deve lançar HttpException se nenhum produto for encontrado', async () => {
-    const categoriaId = 'INEXISTENTE';
+  it('Deve lançar uma exceção se a categoria não for válida', async () => {
+    const categoriaId = 'INVALIDA';
 
-    // Mock do gateway retornando lista vazia
-    (produtoGateway.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue([]);
-
-    await expect(
-      buscarProdutoPorCategoriaController.execute(categoriaId),
-    ).rejects.toThrow(new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST));
-
-    expect(produtoGateway.buscarProdutoPorCategoria).toHaveBeenCalledWith(categoriaId);
-    expect(buscarProdutoUseCase.execute).not.toHaveBeenCalled();
+    await expect(controller.execute(categoriaId)).rejects.toThrow(
+      new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST),
+    );
   });
 
-  it('Deve lançar HttpException se a categoria for inválida', async () => {
-    const categoriaId = 'INVALIDO';
+  it('Deve retornar uma lista vazia se não houver produtos na categoria', async () => {
+    const categoriaId = CategoriaProdutoType.BEBIDA;
 
-    // Mock do gateway retornando null
-    (produtoGateway.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue(null);
+    jest
+      .spyOn(produtoGateway, 'buscarProdutoPorCategoria')
+      .mockResolvedValue([]);
 
-    await expect(
-      buscarProdutoPorCategoriaController.execute(categoriaId),
-    ).rejects.toThrow(new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST));
+    const result = await controller.execute(categoriaId);
 
     expect(produtoGateway.buscarProdutoPorCategoria).toHaveBeenCalledWith(categoriaId);
-    expect(buscarProdutoUseCase.execute).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 });

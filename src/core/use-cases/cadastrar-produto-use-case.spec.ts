@@ -3,6 +3,7 @@ import { CadastrarProdutoUseCase } from './cadastrar-produto-use-case';
 import { ProdutoGateway } from '../adapters/gateways/produto-gateway'; 
 import { ProdutoDTO } from '../dto/produtoDTO'; 
 import { Produto } from '../entities/produto'; 
+import { HttpException } from '@nestjs/common';
 
 describe('CadastrarProdutoUseCase', () => {
   let cadastrarProdutoUseCase: CadastrarProdutoUseCase;
@@ -27,31 +28,26 @@ describe('CadastrarProdutoUseCase', () => {
 
   describe('execute', () => {
     it('Deve chamar o ProdutoGateway.cadastrarProduto e retornar o Produto criado', async () => {
-      // Dados de entrada (ProdutoDTO)
       const produtoDTO: ProdutoDTO = {
         nome: 'X-Salada',
         descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
         categoria: 'LANCHE',
         valor: 25,
-        id: null, // O ID será gerado no cadastro
+        id: null,
       };
 
-      // Produto esperado (após o cadastro)
       const produtoCadastrado: Produto = new Produto(
         produtoDTO.nome,
         produtoDTO.descricao,
         produtoDTO.categoria,
         produtoDTO.valor,
       );
-      produtoCadastrado.id = 'produto-id'; // ID gerado pelo sistema
+      produtoCadastrado.id = 'produto-id';
 
-      // Mockando o comportamento do ProdutoGateway
       (produtoGateway.cadastrarProduto as jest.Mock).mockResolvedValue(produtoCadastrado);
 
-      // Chamando o método execute do use case
       const result = await cadastrarProdutoUseCase.execute(produtoGateway, produtoDTO);
 
-      // Verificando se o método cadastrarProduto foi chamado corretamente
       expect(produtoGateway.cadastrarProduto).toHaveBeenCalledWith(
         expect.objectContaining({
           nome: produtoDTO.nome,
@@ -61,8 +57,33 @@ describe('CadastrarProdutoUseCase', () => {
         }),
       );
 
-      // Verificando se o resultado é o esperado
       expect(result).toEqual(produtoCadastrado);
+    });
+
+    it('Deve lançar exceção para categoria inválida', async () => {
+      const produtoDTO: ProdutoDTO = {
+        nome: 'X-Salada',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'INVALIDA', // Categoria inválida
+        valor: 25,
+        id: null,
+      };
+
+      await expect(cadastrarProdutoUseCase.execute(produtoGateway, produtoDTO))
+        .rejects.toThrow(new HttpException('Categoria inválida.', 400));
+    });
+
+    it('Deve lançar exceção para valor inválido', async () => {
+      const produtoDTO: ProdutoDTO = {
+        nome: 'X-Salada',
+        descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
+        categoria: 'LANCHE',
+        valor: -10, // Valor inválido
+        id: null,
+      };
+
+      await expect(cadastrarProdutoUseCase.execute(produtoGateway, produtoDTO))
+        .rejects.toThrow(new HttpException('Valor inválido.', 400));
     });
   });
 });
