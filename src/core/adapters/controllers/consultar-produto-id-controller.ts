@@ -10,10 +10,10 @@ export class ConsultarProdutoPorIDController {
     private readonly consultarProdutoPorIDUseCase: ConsultarProdutoPorIDUseCase,
   ) {}
 
-  async execute(cpf: string): Promise<ProdutoDTO> {
+  async execute(id: string): Promise<ProdutoDTO> {
     const produto = await this.consultarProdutoPorIDUseCase.execute(
       this.produtoGateway,
-      cpf,
+      id,
     );
     const adapterPresenter: ProdutoDTO = { ...produto };
 

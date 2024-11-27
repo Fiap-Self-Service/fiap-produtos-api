@@ -7,6 +7,7 @@ import { EditarProdutoController } from '../../adapters/controllers/editar-produ
 import { DeletarProdutoController } from '../../adapters/controllers/deletar-produto-controller'; 
 import { ProdutoDTO } from '../../dto/produtoDTO'; 
 import { CategoriaProdutoType } from '../../dto/categoria-produto-type-enum'; 
+import { ConsultarProdutoPorIDController } from '../../adapters/controllers/consultar-produto-id-controller';
 
 describe('ProdutoAPIController', () => {
   let produtoAPIController: ProdutoAPIController;
@@ -15,24 +16,16 @@ describe('ProdutoAPIController', () => {
   let listarProdutoController: ListarProdutoController;
   let editarProdutoController: EditarProdutoController;
   let deletarProdutoController: DeletarProdutoController;
+  let consultarProdutoPorIDController: ConsultarProdutoPorIDController;
 
   beforeEach(async () => {
     // Criando mocks para os controladores
-    const mockCadastrarProdutoController = {
-      execute: jest.fn(),
-    };
-    const mockBuscarProdutoPorCategoriaController = {
-      execute: jest.fn(),
-    };
-    const mockListarProdutoController = {
-      execute: jest.fn(),
-    };
-    const mockEditarProdutoController = {
-      execute: jest.fn(),
-    };
-    const mockDeletarProdutoController = {
-      execute: jest.fn(),
-    };
+    const mockCadastrarProdutoController = { execute: jest.fn() };
+    const mockBuscarProdutoPorCategoriaController = { execute: jest.fn() };
+    const mockListarProdutoController = { execute: jest.fn() };
+    const mockEditarProdutoController = { execute: jest.fn() };
+    const mockDeletarProdutoController = { execute: jest.fn() };
+    const mockConsultarProdutoPorIDController = { execute: jest.fn() };
 
     // Criando o módulo de teste e injetando os mocks
     const module: TestingModule = await Test.createTestingModule({
@@ -43,6 +36,7 @@ describe('ProdutoAPIController', () => {
         { provide: ListarProdutoController, useValue: mockListarProdutoController },
         { provide: EditarProdutoController, useValue: mockEditarProdutoController },
         { provide: DeletarProdutoController, useValue: mockDeletarProdutoController },
+        { provide: ConsultarProdutoPorIDController, useValue: mockConsultarProdutoPorIDController },
       ],
     }).compile();
 
@@ -52,6 +46,7 @@ describe('ProdutoAPIController', () => {
     listarProdutoController = module.get<ListarProdutoController>(ListarProdutoController);
     editarProdutoController = module.get<EditarProdutoController>(EditarProdutoController);
     deletarProdutoController = module.get<DeletarProdutoController>(DeletarProdutoController);
+    consultarProdutoPorIDController = module.get<ConsultarProdutoPorIDController>(ConsultarProdutoPorIDController);
   });
 
   describe('cadastarProduto', () => {
@@ -102,6 +97,26 @@ describe('ProdutoAPIController', () => {
 
       expect(buscarProdutoPorCategoriaController.execute).toHaveBeenCalledWith(categoria);
       expect(result).toEqual(produtosMock);
+    });
+  });
+
+  describe('buscarProdutoPorID', () => {
+    it('Deve chamar o ConsultarProdutoPorIDController e retornar o Produto encontrado', async () => {
+      const produtoMock = {
+        id: '1',
+        nome: 'X-Salada',
+        descricao: 'Descrição atualizada',
+        categoria: "LANCHE",
+        valor: 30,
+      };
+
+      (consultarProdutoPorIDController.execute as jest.Mock).mockResolvedValue(produtoMock);
+
+      const id = '1';
+      const result = await produtoAPIController.buscarProdutoPorID(id);
+
+      expect(consultarProdutoPorIDController.execute).toHaveBeenCalledWith(id);
+      expect(result).toEqual(produtoMock);
     });
   });
 

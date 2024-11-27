@@ -3,20 +3,24 @@ import { BuscarProdutoPorCategoriaController } from './buscar-produto-por-catego
 import { BuscarProdutoPorCategoriaUseCase } from '../../use-cases/buscar-produto-por-categoria-use-case'; 
 import { ProdutoGateway } from '../gateways/produto-gateway'; 
 import { ProdutoDTO } from '../../dto/produtoDTO'; 
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('BuscarProdutoPorCategoriaController', () => {
   let buscarProdutoPorCategoriaController: BuscarProdutoPorCategoriaController;
+  let produtoGateway: ProdutoGateway;
   let buscarProdutoUseCase: BuscarProdutoPorCategoriaUseCase;
 
   beforeEach(async () => {
-    // Mock do ProdutoGateway
-    const mockProdutoGateway = {};
+    // Mocks para dependências
+    const mockProdutoGateway = {
+      buscarProdutoPorCategoria: jest.fn(),
+    };
 
-    // Mock do BuscarProdutoPorCategoriaUseCase
     const mockBuscarProdutoUseCase = {
       execute: jest.fn(),
     };
 
+    // Configuração do módulo de teste
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BuscarProdutoPorCategoriaController,
@@ -25,53 +29,56 @@ describe('BuscarProdutoPorCategoriaController', () => {
       ],
     }).compile();
 
-    buscarProdutoPorCategoriaController = module.get<BuscarProdutoPorCategoriaController>(BuscarProdutoPorCategoriaController);
+    buscarProdutoPorCategoriaController = module.get<BuscarProdutoPorCategoriaController>(
+      BuscarProdutoPorCategoriaController,
+    );
+    produtoGateway = module.get<ProdutoGateway>(ProdutoGateway);
     buscarProdutoUseCase = module.get<BuscarProdutoPorCategoriaUseCase>(BuscarProdutoPorCategoriaUseCase);
   });
 
-  describe('execute', () => {
-    it('Deve retornar uma lista de produtos quando o use case retornar produtos', async () => {
-      const produtosMock: ProdutoDTO[] = [
-        {
-          id: 'produto-id-1',
-          nome: 'X-Salada',
-          descricao: 'Pão brioche, hamburger, queijo, alface e tomate',
-          categoria: 'LANCHE',
-          valor: 25,
-        },
-        {
-          id: 'produto-id-2',
-          nome: 'X-Bacon',
-          descricao: 'Pão brioche, hamburger, queijo, bacon e molho especial',
-          categoria: 'LANCHE',
-          valor: 30,
-        },
-      ];
+  it('Deve retornar a lista de produtos para uma categoria válida', async () => {
+    const categoriaId = 'LANCHE';
+    const produtosMock: ProdutoDTO[] = [
+      { id: '1', nome: 'X-Salada', descricao: 'Descrição', categoria: 'LANCHE', valor: 25 },
+      { id: '2', nome: 'X-Bacon', descricao: 'Descrição', categoria: 'LANCHE', valor: 30 },
+    ];
 
-      (buscarProdutoUseCase.execute as jest.Mock).mockResolvedValue(produtosMock);
+    // Mock do gateway e do use case
+    (produtoGateway.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue(produtosMock);
+    (buscarProdutoUseCase.execute as jest.Mock).mockResolvedValue(produtosMock);
 
-      const result = await buscarProdutoPorCategoriaController.execute('LANCHE');
+    const result = await buscarProdutoPorCategoriaController.execute(categoriaId);
 
-      expect(buscarProdutoUseCase.execute).toHaveBeenCalledWith(expect.any(Object), 'LANCHE');
-      expect(result).toEqual(produtosMock);
-    });
+    expect(produtoGateway.buscarProdutoPorCategoria).toHaveBeenCalledWith(categoriaId);
+    expect(buscarProdutoUseCase.execute).toHaveBeenCalledWith(produtoGateway, categoriaId);
+    expect(result).toEqual(produtosMock);
+  });
 
-    it('Deve retornar uma lista vazia quando o use case retornar uma lista vazia', async () => {
-      (buscarProdutoUseCase.execute as jest.Mock).mockResolvedValue([]);
+  it('Deve lançar HttpException se nenhum produto for encontrado', async () => {
+    const categoriaId = 'INEXISTENTE';
 
-      const result = await buscarProdutoPorCategoriaController.execute('BEBIDA');
+    // Mock do gateway retornando lista vazia
+    (produtoGateway.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue([]);
 
-      expect(buscarProdutoUseCase.execute).toHaveBeenCalledWith(expect.any(Object), 'BEBIDA');
-      expect(result).toEqual([]);
-    });
+    await expect(
+      buscarProdutoPorCategoriaController.execute(categoriaId),
+    ).rejects.toThrow(new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST));
 
-    it('Deve lançar uma exceção quando o use case lançar um erro', async () => {
-      const erro = new Error('Erro ao buscar produtos por categoria');
-      (buscarProdutoUseCase.execute as jest.Mock).mockRejectedValue(erro);
+    expect(produtoGateway.buscarProdutoPorCategoria).toHaveBeenCalledWith(categoriaId);
+    expect(buscarProdutoUseCase.execute).not.toHaveBeenCalled();
+  });
 
-      await expect(buscarProdutoPorCategoriaController.execute('LANCHE')).rejects.toThrow(erro);
+  it('Deve lançar HttpException se a categoria for inválida', async () => {
+    const categoriaId = 'INVALIDO';
 
-      expect(buscarProdutoUseCase.execute).toHaveBeenCalledWith(expect.any(Object), 'LANCHE');
-    });
+    // Mock do gateway retornando null
+    (produtoGateway.buscarProdutoPorCategoria as jest.Mock).mockResolvedValue(null);
+
+    await expect(
+      buscarProdutoPorCategoriaController.execute(categoriaId),
+    ).rejects.toThrow(new HttpException('Categoria não encontrada.', HttpStatus.BAD_REQUEST));
+
+    expect(produtoGateway.buscarProdutoPorCategoria).toHaveBeenCalledWith(categoriaId);
+    expect(buscarProdutoUseCase.execute).not.toHaveBeenCalled();
   });
 });
