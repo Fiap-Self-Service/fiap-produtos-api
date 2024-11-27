@@ -13,6 +13,11 @@ export class CadastrarProdutoUseCase {
       throw new HttpException('Categoria inválida.', HttpStatus.BAD_REQUEST);
     }
 
+    // Verifica se o valor a ser cadastrado é válido
+    if (produtoDTO.valor <= 0) {
+      throw new HttpException('Valor inválido.', HttpStatus.BAD_REQUEST);
+    }
+
     const produto = new Produto(produtoDTO.nome, produtoDTO.descricao, produtoDTO.categoria, produtoDTO.valor);
 
     return await produtoGateway.cadastrarProduto(produto);
