@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CadastrarProdutoUseCase } from './cadastrar-produto-use-case'; 
 import { ProdutoGateway } from '../adapters/gateways/produto-gateway'; 
-import { ProdutoDTO } from '../../core/dto/produtoDTO'; 
-import { Produto } from '../../core/entities/produto'; 
+import { ProdutoDTO } from '../dto/produtoDTO'; 
+import { Produto } from '../entities/produto'; 
 
 describe('CadastrarProdutoUseCase', () => {
   let cadastrarProdutoUseCase: CadastrarProdutoUseCase;

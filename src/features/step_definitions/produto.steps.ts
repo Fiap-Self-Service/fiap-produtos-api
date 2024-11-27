@@ -5,6 +5,7 @@ import assert from 'assert';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module'; 
 import { ProdutoDTO } from '../../core/dto/produtoDTO';
+import { DataSource } from 'typeorm';
 
 let app: INestApplication;
 let produtoDTO: ProdutoDTO;
@@ -35,6 +36,7 @@ Before(async () => {
 
   app = moduleFixture.createNestApplication();
   await app.init();
+  
 });
 
 After(async () => {
@@ -99,16 +101,25 @@ Then('todos os produtos cadastrados devem ser retornados', async () => {
   assert.ok(response.body.length > 0);
 });
 
-Then('uma lista vazia deve ser retornada', async () => {
-  assert.equal(response.status, HttpStatus.OK);
-  assert.equal(response.body.length, 0);
-});
-
 /**
  * Consultar Produto por Categoria
  */
 Given('que a categoria de pesquisa é válida', async () => {
   categoriaPesquisa = PRODUTO1.categoria;
+  // Garantindo que produtos estão cadastrados na categoria
+  await request(app.getHttpServer()).post('/produtos').send(PRODUTO1);
+  await request(app.getHttpServer()).post('/produtos').send(PRODUTO2);
+});
+
+Given('não existem produtos cadastrados para a categoria', async () => {
+  // Lista todos os produtos cadastrados
+  const listResponse = await request(app.getHttpServer()).get('/produtos');
+  const produtos = listResponse.body;
+
+  // Exclui cada produto individualmente
+  for (const produto of produtos) {
+    await request(app.getHttpServer()).delete(`/produtos/${produto.id}`);
+  }
 });
 
 Given('que a categoria de pesquisa não é válida', async () => {
@@ -117,7 +128,7 @@ Given('que a categoria de pesquisa não é válida', async () => {
 
 When('o produto solicita a listagem de produtos por categoria', async () => {
   response = await request(app.getHttpServer())
-    .get('/produtos/categoria?categoria=' + categoriaPesquisa)
+    .get(`/produtos/categoria?categoria=${categoriaPesquisa}`)
     .send();
 });
 
@@ -132,6 +143,12 @@ Then('os produtos da categoria pesquisada devem ser retornados', async () => {
 Then('uma exceção informando que a categoria não foi encontrada deve ser lançada', async () => {
   assert.equal(response.status, HttpStatus.BAD_REQUEST);
   assert.equal(response.body.message, 'Categoria não encontrada.');
+});
+
+Then('uma lista vazia deve ser retornada', async () => {
+  assert.equal(response.status, HttpStatus.OK); 
+  assert.ok(Array.isArray(response.body));
+  assert.equal(response.body.length, 0); 
 });
 
 /**
