@@ -1,4 +1,4 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: fiap-produto-api
+  name: fiap-produtos-api

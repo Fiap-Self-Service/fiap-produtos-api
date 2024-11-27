@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fiap-produto-api-service
-  namespace: fiap-produto-api
+  name: fiap-produtos-api-service
+  namespace: fiap-produtos-api
 
 spec:
   type: LoadBalancer
   selector:
-    app: fiap-produto-api
+    app: fiap-produtos-api
   ports:
     - protocol: TCP
       port: 3000

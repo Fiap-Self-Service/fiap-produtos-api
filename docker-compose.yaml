@@ -2,29 +2,29 @@ version: '3.7'
 
 services:
 
-  fiap-produto-api:
+  fiap-produtos-api:
     build:
       context: .
       dockerfile: Dockerfile
     networks: 
-      - fiap-produto-api-net
+      - fiap-produtos-api-net
     restart: always
     depends_on:
-      - fiap-produto-api-db-mysql
+      - fiap-produtos-api-db-mysql
     ports:
       - 3000:3000
     environment:
-      DATABASE_HOST: fiap-produto-api-db-mysql
+      DATABASE_HOST: fiap-produtos-api-db-mysql
       DATABASE_PORT: 3306
       DATABASE_USERNAME: fiap
       DATABASE_PASSWORD: fiap
       DATABASE_DATABASE: fiap-produto
 
-  fiap-produto-api-db-mysql:
+  fiap-produtos-api-db-mysql:
     image: mysql:8.0
     restart: always
     networks: 
-      - fiap-produto-api-net
+      - fiap-produtos-api-net
     volumes:
       - mysql_data_fiap_produto:/var/lib/mysql
     ports:
@@ -39,5 +39,5 @@ volumes:
   mysql_data_fiap_produto: {}
 
 networks:
-  fiap-produto-api-net:
+  fiap-produtos-api-net:
     driver: bridge
