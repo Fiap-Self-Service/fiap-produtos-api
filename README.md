@@ -40,6 +40,6 @@ Jackson Carbonera - **RM354963** - [jwccarbonera@outlook.com](mailto:jwccarboner
 |:-:|
 | *Imagem 1. Cobertura de testes unitários* |
 
-|![codecov](docs/codecov.png)|
+|![codecov](docs/codecov.jpg)|
 |:-:|
 | *Imagem 2. Plataforma codecov integrada ao CI/CD.* |
