@@ -7,7 +7,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: fiap-produtos-api
+    app: fiap-produtos-api-deployment
   ports:
     - protocol: TCP
       port: 3001
