@@ -16,7 +16,7 @@ spec:
         - name: fiap-produtos-api-deployment-container
           image: jacksoncarbonera/fiap-produtos-api
           ports:
-            - containerPort: 3000
+            - containerPort: 3001
           envFrom:
           - configMapRef:
               name: fiap-produtos-api-config 
@@ -25,14 +25,14 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 3000
+              port: 3001
             periodSeconds: 10
             failureThreshold: 3
             initialDelaySeconds: 20
           readinessProbe:
             httpGet:
               path: /health
-              port: 3000
+              port: 3001
             periodSeconds: 10
             failureThreshold: 5
             initialDelaySeconds: 3
