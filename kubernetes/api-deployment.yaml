@@ -4,7 +4,7 @@ metadata:
   name: fiap-produtos-api-deployment
   namespace: fiap-produtos-api
   labels:
-    app: fiap-produtos-api
+    app: fiap-produtos-api-deployment
 spec:
   template:
     metadata:
